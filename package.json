@@ -1,0 +1,22 @@
+{
+  "name": "sqlite-search",
+  "version": "1.0.0",
+  "description": "automated sqlite text indexing via streams",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxogden/sqlite-search.git"
+  },
+  "keywords": [
+    "dat"
+  ],
+  "author": "max ogden",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/maxogden/sqlite-search/issues"
+  },
+  "homepage": "https://github.com/maxogden/sqlite-search"
+}
