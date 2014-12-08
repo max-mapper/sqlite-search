@@ -1,10 +1,10 @@
 {
   "name": "sqlite-search",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "automated sqlite text indexing via streams",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "./test.sh"
   },
   "repository": {
     "type": "git",
