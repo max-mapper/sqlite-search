@@ -21,7 +21,11 @@ module.exports = function(opts, cb) {
         var field = searchOpts.field
         var query = searchOpts.query
         var select = searchOpts.select || ['*']
-        var statement = "SELECT " + select.join(', ') + " FROM " + opts.name + " WHERE " + field + " MATCH '" + query + "';"
+        var statement = searchOpts.statement || 
+          "SELECT " + select.join(', ') +
+          " FROM " + opts.name +
+          " WHERE " + field +
+          " MATCH '" + query + "';"
         db.each(statement, function onRow(err, row) {
           if (err) return reader.destroy(err)
           reader.push(row)

@@ -26,3 +26,5 @@ returns a readable object stream that emits search result objects
 - `field` - **required** - which column to search against
 - `query` - **required** - the search query string, passed to `MATCH`
 - `select` - an array of strings to use as the select arguments, e.g. `['foo', 'bar']` tranlates into `SELECT foo, bar`. defaults to `*` if not specified
+- `statement` - optionally you can specify a full SQL statement to run as the query. if specified all other options will be ignored
+
