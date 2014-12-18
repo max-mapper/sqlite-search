@@ -8,7 +8,11 @@ search({path: 'test.sqlite', columns: ["foo", "bar"]}, function(err, db) {
     field: process.argv[2],
     query: process.argv[3]
   }
-  db.createSearchStream(opts).on('data', function(row) {
+  var searchStream = db.createSearchStream(opts)
+  searchStream.on('data', function(row) {
     console.log(JSON.stringify(row))
+  })
+  searchStream.on('error', function(err) {
+    console.error('error', err)
   })
 })

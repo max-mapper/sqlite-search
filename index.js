@@ -1,5 +1,4 @@
 var sqlite3 = require('sqlite3').verbose()
-var series = require('run-series')
 var eos = require('end-of-stream')
 var through = require('through2')
 
@@ -20,12 +19,19 @@ module.exports = function(opts, cb) {
       function createSearchStream(searchOpts) {
         var field = searchOpts.field
         var query = searchOpts.query
+        var order = searchOpts.order || field
+        var since = searchOpts.since
+        var limit = searchOpts.limit
         var select = searchOpts.select || ['*']
         var statement = searchOpts.statement || 
           "SELECT " + select.join(', ') +
           " FROM " + opts.name +
           " WHERE " + field +
-          " MATCH '" + query + "';"
+          (since ? " > '" + since + "' AND " + field : '') +
+          " MATCH '" + query + "'" + 
+          "ORDER BY " + order +
+          (limit ? "LIMIT " + limit : '') +
+          ";"
         db.each(statement, function onRow(err, row) {
           if (err) return reader.destroy(err)
           reader.push(row)
@@ -58,18 +64,10 @@ module.exports = function(opts, cb) {
         
         return writer
       }
-
     })
   })
 }
 
 function setup(db, opts, cb) {
-  var ops = [
-    // function(cb) { db.run("CREATE TABLE IF NOT EXISTS data (name VARCHAR PRIMARY KEY, readme TEXT);", cb) },
-    function(cb) { db.run("CREATE VIRTUAL TABLE IF NOT EXISTS " + opts.name + " USING FTS3(" + opts.columns.join(', ') + ");", cb) }
-    // function(cb) { db.run("INSERT INTO data_search(data_search) VALUES('rebuild');", cb) }
-  ]
-   series(ops, function(errs) {
-    cb(errs)
-  })
+  db.run("CREATE VIRTUAL TABLE IF NOT EXISTS " + opts.name + " USING FTS3(" + opts.columns.join(', ') + ");", cb)
 }
