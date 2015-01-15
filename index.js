@@ -44,14 +44,15 @@ module.exports = function(opts, cb) {
       
       function createWriteStream() {
         var writer = through.obj(function(obj, enc, next) {
-          var keys = Object.keys(obj).sort()
+          var keys = Object.keys(obj).sort().filter(function(k) { return opts.columns.indexOf(k) > -1 })
           var vals = []
           var placeholders = []
           keys.forEach(function(k) {
             vals.push(obj[k])
             placeholders.push('?')
           })
-          db.run("INSERT INTO " + opts.name + " (" + keys.join(', ') + ") VALUES (" + placeholders.join(', ') + ")", vals, function(err) {
+          var statement = "INSERT INTO " + opts.name + " (" + keys.join(', ') + ") VALUES (" + placeholders.join(', ') + ")"
+          db.run(statement, vals, function(err) {
             if (err) writer.destroy(err)
             next()
           })
@@ -59,7 +60,6 @@ module.exports = function(opts, cb) {
   
         eos(writer, function(err) {
           if (err) console.error('writer error', err)
-          console.log('closing')
         })
         
         return writer

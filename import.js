@@ -11,11 +11,3 @@ search({path: 'test.sqlite', columns: ["foo", "bar"]}, function(err, db) {
     db.db.close()
   })
 })
-
-function filter() {
-  var stream = through.obj(function(obj, enc, next) {
-    if (obj.name && obj.readme) stream.push(obj)
-    next()
-  })
-  return stream
-}
