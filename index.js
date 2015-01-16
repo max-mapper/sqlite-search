@@ -6,32 +6,37 @@ module.exports = function(opts, cb) {
   if (!opts.name) opts.name = "data_search"
   var db = new sqlite3.Database(opts.path, function(err) {
     if (err) cb(err)
-    
+
     setup(db, opts, function(err) {
       if (err) return cb(err)
-        
+
+      var primaryKey = opts.primaryKey
+
       cb(null, {
         createWriteStream: createWriteStream,
         createSearchStream: createSearchStream,
         db: db
       })
-      
+
       function createSearchStream(searchOpts) {
         var field = searchOpts.field
         var query = searchOpts.query
-        var order = searchOpts.order || field
+        var order = searchOpts.order || primaryKey
         var since = searchOpts.since
         var limit = searchOpts.limit
         var select = searchOpts.select || ['*']
-        var statement = searchOpts.statement || 
+
+        var statement = searchOpts.statement ||
           "SELECT " + select.join(', ') +
           " FROM " + opts.name +
-          " WHERE " + field +
-          (since ? " > '" + since + "' AND " + field : '') +
-          " MATCH '" + query + "'" + 
-          "ORDER BY " + order +
-          (limit ? "LIMIT " + limit : '') +
+          " WHERE " +
+          (since ? primaryKey + " > '" + since + "' AND " + field : field) +
+          " MATCH '" + query + "'" +
+          " ORDER BY " + order +
+          (limit ? " LIMIT " + limit : '') +
           ";"
+
+        console.log(statement)
         db.each(statement, function onRow(err, row) {
           if (err) return reader.destroy(err)
           reader.push(row)
@@ -41,7 +46,7 @@ module.exports = function(opts, cb) {
         var reader = through.obj()
         return reader
       }
-      
+
       function createWriteStream() {
         var writer = through.obj(function(obj, enc, next) {
           var keys = Object.keys(obj).sort().filter(function(k) { return opts.columns.indexOf(k) > -1 })
@@ -57,11 +62,11 @@ module.exports = function(opts, cb) {
             next()
           })
         })
-  
+
         eos(writer, function(err) {
           if (err) console.error('writer error', err)
         })
-        
+
         return writer
       }
     })
