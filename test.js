@@ -1,4 +1,4 @@
-var search = require('./')
+var sqliteSearch = require('./')
 var fs = require('fs')
 var test = require('tape')
 var ndjson = require('ndjson')
@@ -12,7 +12,7 @@ function setupDatabase(cb) {
     columns: ["readme", "name"]
   }
   rimraf('test.sqlite', function () {
-    search(searchOpts, function(err, db) {
+    sqliteSearch.setup(searchOpts, function(err, db) {
       if (err) console.error('err')
       var writer = db.createWriteStream()
       fs.createReadStream('test.ndjson').pipe(ndjson.parse()).pipe(writer)

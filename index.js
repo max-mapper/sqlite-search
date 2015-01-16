@@ -1,13 +1,45 @@
 var sqlite3 = require('sqlite3').verbose()
 var eos = require('end-of-stream')
 var through = require('through2')
+var debug = require('debug')('sqlite-search')
+var formatData = require('format-data')
+var qs = require('querystring')
 
-module.exports = function(opts, cb) {
+SqliteSearch = {}
+
+SqliteSearch.search = function(db, opts) {
+  var searchOpts = {
+    field: opts.column,
+    query: opts.term,
+    limit: parseInt(opts.limit),
+    offset: parseInt(opts.offset || 0),
+    select: opts.select || ["*"]
+  }
+
+  debug('search', searchOpts)
+
+  var formatOpts = {
+    format: "object"
+  }
+
+  if (searchOpts.limit) {
+    var nextOpts = {
+      offset: searchOpts.offset + searchOpts.limit,
+      limit: searchOpts.limit
+    }
+
+    formatOpts.suffix = ', "next": "?' + qs.stringify(nextOpts) + '"}'
+  }
+
+  return db.createSearchStream(searchOpts).pipe(formatData(formatOpts))
+}
+
+SqliteSearch.setup = function(opts, cb) {
   if (!opts.name) opts.name = "data_search"
   var db = new sqlite3.Database(opts.path, function(err) {
     if (err) cb(err)
 
-    setup(db, opts, function(err) {
+    create(db, opts, function(err) {
       if (err) return cb(err)
 
       var primaryKey = opts.primaryKey
@@ -24,6 +56,7 @@ module.exports = function(opts, cb) {
         var order = searchOpts.order || primaryKey
         var since = searchOpts.since
         var limit = searchOpts.limit
+        var offset = searchOpts.offset
         var select = searchOpts.select || ['*']
 
         var statement = searchOpts.statement ||
@@ -34,9 +67,10 @@ module.exports = function(opts, cb) {
           " MATCH '" + query + "'" +
           " ORDER BY " + order +
           (limit ? " LIMIT " + limit : '') +
+          (offset ? " OFFSET " + offset : '') +
           ";"
 
-        console.log(statement)
+        debug('executing \n', statement)
         db.each(statement, function onRow(err, row) {
           if (err) return reader.destroy(err)
           reader.push(row)
@@ -73,6 +107,8 @@ module.exports = function(opts, cb) {
   })
 }
 
-function setup(db, opts, cb) {
+function create(db, opts, cb) {
   db.run("CREATE VIRTUAL TABLE IF NOT EXISTS " + opts.name + " USING FTS3(" + opts.columns.join(', ') + ");", cb)
 }
+
+module.exports = SqliteSearch
