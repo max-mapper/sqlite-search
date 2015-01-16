@@ -30,5 +30,6 @@ returns a readable object stream that emits search result objects
 - `order` - `ORDER BY ?` (default primaryKey)
 - `since` - if supplied will put in an `AND ? > ?` with `[since, primaryKey]` to the query
 - `limit` - `LIMIT ?`
+- `offset` - `OFFSET ?`
 - `statement` - optionally you can specify a full SQL statement to run as the query. if specified all other options will be ignored
 
