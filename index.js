@@ -60,18 +60,17 @@ SqliteSearch.prototype.createSearchStream = function (searchOpts) {
   })
   var searchStream = through.obj()
 
-  if (formatType == 'ndjson') return searchStream
-  else {
+  if (formatType == 'object') {
     debug('formatting stream to ', formatType)
 
     var formatOpts = {
       format: formatType
     }
 
-    if (searchOpts.limit) {
+    if (limit) {
       var nextOpts = {
-        offset: searchOpts.offset + searchOpts.limit,
-        limit: searchOpts.limit
+        offset: offset + limit,
+        limit:  limit
       }
 
       formatOpts.suffix = ', "next": "?' + qs.stringify(nextOpts) + '"}'
@@ -84,6 +83,9 @@ SqliteSearch.prototype.createSearchStream = function (searchOpts) {
     })
 
     return pump(searchStream, formatStream)
+  }
+  else {
+    return searchStream
   }
 }
 
