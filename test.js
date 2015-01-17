@@ -4,6 +4,7 @@ var test = require('tape')
 var ndjson = require('ndjson')
 var rimraf = require('rimraf')
 var eos = require('end-of-stream')
+var concat = require('concat-stream')
 
 function setupDatabase(cb) {
   var searchOpts = {
@@ -12,21 +13,21 @@ function setupDatabase(cb) {
     columns: ["readme", "name"]
   }
   rimraf('test.sqlite', function () {
-    sqliteSearch.setup(searchOpts, function(err, db) {
+    sqliteSearch(searchOpts, function(err, searcher) {
       if (err) console.error('err')
-      var writer = db.createWriteStream()
+      var writer = searcher.createWriteStream()
       fs.createReadStream('test.ndjson').pipe(ndjson.parse()).pipe(writer)
       writer.on('finish', function() {
-        cb(err, db)
+        cb(err, searcher)
       })
     })
   })
 }
 
-function getValues(db, opts, cb) {
+function getValues(searcher, opts, cb) {
   var values = []
 
-  var searchStream = db.createSearchStream(opts)
+  var searchStream = searcher.createSearchStream(opts)
   searchStream.on('data', function(row) {
     values.push(row)
   })
@@ -38,7 +39,7 @@ function getValues(db, opts, cb) {
 
 
 test('test that search returns the right rows', function (t) {
-  setupDatabase(function (err, db) {
+  setupDatabase(function (err, searcher) {
     t.plan(2)
 
     var opts = {
@@ -46,7 +47,7 @@ test('test that search returns the right rows', function (t) {
       query: 'Build Status'
     }
 
-    getValues(db, opts, function (err, values) {
+    getValues(searcher, opts, function (err, values) {
       t.ifError(err)
       t.equals(values.length, 7)
     })
@@ -55,7 +56,7 @@ test('test that search returns the right rows', function (t) {
 
 
 test('test since', function (t) {
-  setupDatabase(function (err, db)  {
+  setupDatabase(function (err, searcher)  {
     t.plan(2)
 
     var opts = {
@@ -64,7 +65,7 @@ test('test since', function (t) {
       since: 'AQ'
     }
 
-    getValues(db, opts, function (err, values) {
+    getValues(searcher, opts, function (err, values) {
       t.ifError(err)
       t.equals(values.length, 6)
     })
@@ -73,7 +74,7 @@ test('test since', function (t) {
 
 
 test('test limit', function (t) {
-  setupDatabase(function (err, db)  {
+  setupDatabase(function (err, searcher)  {
     t.plan(2)
 
     var opts = {
@@ -82,7 +83,7 @@ test('test limit', function (t) {
       limit: 1
     }
 
-    getValues(db, opts, function (err, values) {
+    getValues(searcher, opts, function (err, values) {
       t.ifError(err)
       t.equals(values.length, 1)
     })
@@ -91,7 +92,7 @@ test('test limit', function (t) {
 
 
 test('test since and limit', function (t) {
-  setupDatabase(function (err, db)  {
+  setupDatabase(function (err, searcher)  {
     t.plan(3)
 
     var opts = {
@@ -101,7 +102,7 @@ test('test since and limit', function (t) {
       since: 'AQ'
     }
 
-    getValues(db, opts, function (err, values) {
+    getValues(searcher, opts, function (err, values) {
       t.ifError(err)
       t.equals(values.length, 1)
       var row = values[0]
@@ -112,7 +113,7 @@ test('test since and limit', function (t) {
 
 
 test('test offset', function (t) {
-  setupDatabase(function (err, db)  {
+  setupDatabase(function (err, searcher)  {
     t.plan(6)
 
     var opts = {
@@ -122,7 +123,7 @@ test('test offset', function (t) {
       offset: 0
     }
 
-    getValues(db, opts, function (err, values) {
+    getValues(searcher, opts, function (err, values) {
       t.ifError(err)
       t.equals(values.length, 1)
 
@@ -133,7 +134,7 @@ test('test offset', function (t) {
         offset: 1
       }
 
-      getValues(db, opts, function (err, values2) {
+      getValues(searcher, opts, function (err, values2) {
         t.ifError(err)
         t.equals(values2.length, 1)
         t.notEquals(values2[0], values[0], 'with offset, should get a different value')
@@ -141,5 +142,25 @@ test('test offset', function (t) {
       })
     })
 
+  })
+})
+
+test('test search with object type formatting', function (t) {
+  setupDatabase(function (err, searcher)  {
+    t.plan(2)
+
+    var searchOpts = {
+      field: 'readme',
+      query: 'Build Status',
+      offset: 0,
+      limit: 1,
+      formatType: 'object'
+    }
+    var searchStream = searcher.createSearchStream(searchOpts)
+    searchStream.pipe(concat(function (data) {
+      var json = JSON.parse(data)
+      t.equals(json.rows.length, 1, 'should return just 1 value')
+      t.ok(json.next, 'has next')
+    }))
   })
 })
