@@ -4,7 +4,7 @@
 
 ## api
 
-### require('sqlte-search')(opts, readyCallback)
+### require('sqlite-search')(opts, readyCallback)
 
 `opts`:
 
@@ -12,13 +12,21 @@
 - `columns` - **required** - an array of columns, e.g. `['foo', 'bar']` to use as the schema for the search table
 - `primaryKey` - **required** - the primary key that will be passed to `since` and will by default order the column
 
-`readyCallback` will get called with `err, instance`
+### `readyCallback`
+Will get called with `err, instance`
+```js
+var sqliteSearch = require('sqlite-search')
+sqliteSearch(opts, function (err, searcher) {
+  searcher.createSearchStream(searchOpts)
+})
+```
+
 
 ### instance.createWriteStream()
 
 returns a writable object stream. objects written into this stream will be stored in the search table. make sure the keys of your object were included in the `columns` array you passed into the constructor above
 
-### instance.createQueryStream(opts)
+### instance.createSearchStream(opts)
 
 returns a readable object stream that emits search result objects
 
@@ -32,4 +40,5 @@ returns a readable object stream that emits search result objects
 - `limit` - `LIMIT ?`
 - `offset` - `OFFSET ?`
 - `statement` - optionally you can specify a full SQL statement to run as the query. if specified all other options will be ignored
+- `formatType` - if set to 'object' will format the search response as JSON for streaming. See https://github.com/maxogden/npm-readme-search for an example.
 
