@@ -10,6 +10,7 @@
 
 - `path` - **required** - the path to where the sqlite db should be stored/read from
 - `columns` - **required** - an array of columns, e.g. `['foo', 'bar']` to use as the schema for the search table
+- `primaryKey` - **required** - the primary key that will be passed to `since` and will by default order the column
 
 `readyCallback` will get called with `err, instance`
 
@@ -26,8 +27,9 @@ returns a readable object stream that emits search result objects
 - `field` - **required** - which column to search against
 - `query` - **required** - the search query string, passed to `MATCH`
 - `select` - an array of strings to use as the select arguments, e.g. `['foo', 'bar']` tranlates into `SELECT foo, bar`. defaults to `*` if not specified
-- `order` - `ORDER BY ?`
-- `since` - if supplied will put in an `AND ? > ?` with `[since, field]` to the query
+- `order` - `ORDER BY ?` (default primaryKey)
+- `since` - if supplied will put in an `AND ? > ?` with `[since, primaryKey]` to the query
 - `limit` - `LIMIT ?`
+- `offset` - `OFFSET ?`
 - `statement` - optionally you can specify a full SQL statement to run as the query. if specified all other options will be ignored
 
