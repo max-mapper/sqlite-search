@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "concat-stream": "^1.4.7",
-    "tape": "^3.2.0"
+    "tape": "^3.2.0",
+    "rimraf": "^2.2.8"
   }
 }
