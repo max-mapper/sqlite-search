@@ -147,7 +147,7 @@ test('test offset', function (t) {
 
 test('test search with object type formatting', function (t) {
   setupDatabase(function (err, searcher)  {
-    t.plan(2)
+    t.plan(1)
 
     var searchOpts = {
       field: 'readme',
@@ -160,7 +160,6 @@ test('test search with object type formatting', function (t) {
     searchStream.pipe(concat(function (data) {
       var json = JSON.parse(data)
       t.equals(json.rows.length, 1, 'should return just 1 value')
-      t.ok(json.next, 'has next')
     }))
   })
 })
