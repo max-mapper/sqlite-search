@@ -51,6 +51,7 @@ SqliteSearch.prototype.createSearchStream = function (searchOpts) {
     (offset ? " OFFSET " + offset : '') +
     ";"
 
+
   debug('executing \n', statement)
   self.db.each(statement, function onRow(err, row) {
     if (err) return searchStream.destroy(err)
@@ -72,8 +73,6 @@ SqliteSearch.prototype.createSearchStream = function (searchOpts) {
         offset: offset + limit,
         limit:  limit
       }
-
-      formatOpts.suffix = ', "next": "?' + qs.stringify(nextOpts) + '"}'
     }
 
     var formatStream = formatData(formatOpts)
